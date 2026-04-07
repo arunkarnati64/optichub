@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const StripeLib = require('stripe');
 import { env } from '../config/env';
 import { Order } from '../models/Order';
 import { User } from '../models/User';
 import { sendOrderConfirmation } from './email.service';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const StripeLib = require('stripe');
 const stripe = new StripeLib(env.STRIPE_SECRET_KEY);
 
 export const createPaymentIntent = async (

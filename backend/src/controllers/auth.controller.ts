@@ -19,12 +19,10 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-const isProduction = process.env.NODE_ENV === 'production';
-
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: (isProduction ? 'none' : 'strict') as 'none' | 'strict',
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
 };
 
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

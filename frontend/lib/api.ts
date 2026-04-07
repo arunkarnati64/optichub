@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true, // send cookies with every request
+  baseURL: '/api',
+  withCredentials: true,
 });
 
 // If access token expires, try to refresh it automatically

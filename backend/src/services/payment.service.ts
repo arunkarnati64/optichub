@@ -1,21 +1,22 @@
-import Stripe from 'stripe';
+/* eslint-disable @typescript-eslint/no-var-requires */
+const StripeLib = require('stripe');
 import { env } from '../config/env';
 import { Order } from '../models/Order';
 import { User } from '../models/User';
 import { sendOrderConfirmation } from './email.service';
 
-const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+const stripe = new StripeLib(env.STRIPE_SECRET_KEY);
 
 export const createPaymentIntent = async (
   amount: number,
   orderId: string
 ): Promise<string> => {
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(amount * 100), // convert to cents
+    amount: Math.round(amount * 100),
     currency: 'usd',
     metadata: { orderId },
   });
-  return paymentIntent.client_secret!;
+  return paymentIntent.client_secret;
 };
 
 export const handleWebhook = async (payload: Buffer, signature: string): Promise<void> => {
@@ -26,7 +27,7 @@ export const handleWebhook = async (payload: Buffer, signature: string): Promise
   );
 
   if (event.type === 'payment_intent.succeeded') {
-    const intent = event.data.object as Stripe.PaymentIntent;
+    const intent = event.data.object as any;
     const orderId = intent.metadata.orderId;
     if (orderId) {
       const order = await Order.findByIdAndUpdate(orderId, { status: 'paid' }, { new: true });
@@ -37,7 +38,7 @@ export const handleWebhook = async (payload: Buffer, signature: string): Promise
             user.email,
             user.name,
             String(order._id),
-            order.items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
+            order.items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: i.price })),
             order.subtotal,
             order.shippingCost,
             order.total,
@@ -49,7 +50,7 @@ export const handleWebhook = async (payload: Buffer, signature: string): Promise
   }
 
   if (event.type === 'payment_intent.payment_failed') {
-    const intent = event.data.object as Stripe.PaymentIntent;
+    const intent = event.data.object as any;
     const orderId = intent.metadata.orderId;
     if (orderId) {
       await Order.findByIdAndUpdate(orderId, { status: 'cancelled' });

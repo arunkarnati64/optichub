@@ -14,7 +14,7 @@ const shippingSchema = z.object({
 
 const cartItemSchema = z.object({
   productId: z.string(),
-  quantity: z.union([z.number(), z.string()]).transform((v) => Number(v)),
+  quantity: z.union([z.number(), z.string()]).transform((v) => Number(v)).pipe(z.number()),
 });
 
 export const createOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

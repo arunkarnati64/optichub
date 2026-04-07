@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+// Server components call Railway directly; browser uses Vercel proxy
+const isServer = typeof window === 'undefined';
+const baseURL = isServer
+  ? 'https://optichub-production.up.railway.app/api'
+  : '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL,
   withCredentials: true,
 });
 

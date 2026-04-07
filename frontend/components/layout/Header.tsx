@@ -48,7 +48,7 @@ export default function Header() {
         ? 'bg-white/80 backdrop-blur-xl shadow-sm border-b border-gray-100/50'
         : 'bg-white border-b border-gray-100'
     }`}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
         <div className="flex h-16 items-center justify-between">
 
           {/* Logo */}

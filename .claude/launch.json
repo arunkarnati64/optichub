@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Backend (Express + TypeScript)",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["/Users/arunreddy/drop-shipping/start-backend.sh"],
+      "cwd": "/Users/arunreddy/drop-shipping/backend",
+      "port": 8000
+    },
+    {
+      "name": "Frontend (Next.js)",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["/Users/arunreddy/drop-shipping/start-frontend.sh"],
+      "cwd": "/Users/arunreddy/drop-shipping/frontend",
+      "port": 3000
+    }
+  ]
+}

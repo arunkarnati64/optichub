@@ -160,8 +160,9 @@ function PaymentForm({ orderId }: { orderId: string }) {
     setError('');
     setLoading(true);
 
-    const { error: stripeError } = await stripe.confirmPayment({
+    const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
       elements,
+      redirect: 'if_required',
       confirmParams: {
         return_url: `${window.location.origin}/orders/${orderId}?success=true`,
       },
@@ -170,8 +171,9 @@ function PaymentForm({ orderId }: { orderId: string }) {
     if (stripeError) {
       setError(stripeError.message ?? 'Payment failed');
       setLoading(false);
-    } else {
+    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
       clearCart();
+      router.push(`/orders/${orderId}?success=true`);
     }
   };
 

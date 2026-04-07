@@ -7,16 +7,48 @@ import { sendOrderConfirmation } from './email.service';
 const StripeLib = require('stripe');
 const stripe = new StripeLib(env.STRIPE_SECRET_KEY);
 
-export const createPaymentIntent = async (
-  amount: number,
-  orderId: string
+export const createCheckoutSession = async (
+  orderId: string,
+  items: { name: string; price: number; quantity: number; image?: string }[],
+  total: number,
+  shippingCost: number
 ): Promise<string> => {
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(amount * 100),
-    currency: 'usd',
+  const lineItems = items.map((item) => ({
+    price_data: {
+      currency: 'usd',
+      product_data: {
+        name: item.name,
+        ...(item.image ? { images: [item.image] } : {}),
+      },
+      unit_amount: Math.round(item.price * 100),
+    },
+    quantity: item.quantity,
+  }));
+
+  // Add shipping as a line item if applicable
+  if (shippingCost > 0) {
+    lineItems.push({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: 'Shipping',
+        },
+        unit_amount: Math.round(shippingCost * 100),
+      },
+      quantity: 1,
+    });
+  }
+
+  const session = await stripe.checkout.sessions.create({
+    mode: 'payment',
+    payment_method_types: ['card'],
+    line_items: lineItems,
     metadata: { orderId },
+    success_url: `${env.CLIENT_URL}/orders/${orderId}?success=true`,
+    cancel_url: `${env.CLIENT_URL}/cart?cancelled=true`,
   });
-  return paymentIntent.client_secret;
+
+  return session.url;
 };
 
 export const handleWebhook = async (payload: Buffer, signature: string): Promise<void> => {
@@ -26,9 +58,9 @@ export const handleWebhook = async (payload: Buffer, signature: string): Promise
     env.STRIPE_WEBHOOK_SECRET
   );
 
-  if (event.type === 'payment_intent.succeeded') {
-    const intent = event.data.object as any;
-    const orderId = intent.metadata.orderId;
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as any;
+    const orderId = session.metadata?.orderId;
     if (orderId) {
       const order = await Order.findByIdAndUpdate(orderId, { status: 'paid' }, { new: true });
       if (order) {
@@ -49,9 +81,9 @@ export const handleWebhook = async (payload: Buffer, signature: string): Promise
     }
   }
 
-  if (event.type === 'payment_intent.payment_failed') {
-    const intent = event.data.object as any;
-    const orderId = intent.metadata.orderId;
+  if (event.type === 'checkout.session.expired') {
+    const session = event.data.object as any;
+    const orderId = session.metadata?.orderId;
     if (orderId) {
       await Order.findByIdAndUpdate(orderId, { status: 'cancelled' });
     }

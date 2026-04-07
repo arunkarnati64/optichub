@@ -25,9 +25,9 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     }).parse(req.body);
 
     const userId = String((req as any).user._id);
-    const { order, clientSecret } = await orderService.createOrder(userId, cartItems, shippingAddress);
+    const { order, checkoutUrl } = await orderService.createOrder(userId, cartItems, shippingAddress);
 
-    res.status(201).json({ order, clientSecret });
+    res.status(201).json({ order, checkoutUrl });
   } catch (err) {
     next(err);
   }

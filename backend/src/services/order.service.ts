@@ -1,7 +1,7 @@
 import { Order, IShippingAddress } from '../models/Order';
 import { Product } from '../models/Product';
 import { User } from '../models/User';
-import { createPaymentIntent } from './payment.service';
+import { createCheckoutSession } from './payment.service';
 import { sendOrderConfirmation, sendStatusUpdate } from './email.service';
 
 interface CartItem {
@@ -45,25 +45,15 @@ export const createOrder = async (
     status: 'pending',
   });
 
-  // Create Stripe payment intent
-  const clientSecret = await createPaymentIntent(total, String(order._id));
+  // Create Stripe Checkout Session
+  const checkoutUrl = await createCheckoutSession(
+    String(order._id),
+    items.map((i) => ({ name: i.name, price: i.price, quantity: i.quantity, image: i.image })),
+    total,
+    shippingCost
+  );
 
-  // Send confirmation email immediately
-  const user = await User.findById(userId);
-  if (user) {
-    await sendOrderConfirmation(
-      user.email,
-      user.name,
-      String(order._id),
-      items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
-      subtotal,
-      shippingCost,
-      total,
-      shippingAddress
-    );
-  }
-
-  return { order, clientSecret };
+  return { order, checkoutUrl };
 };
 
 export const getOrdersByUser = async (userId: string) => {
